@@ -1,0 +1,21 @@
+{
+  "name": "@workspace/tic-tac-toe-ai",
+  "version": "1.0.0",
+  "description": "Tic-Tac-Toe AI game",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo \"no build step\""
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0",
+    "groq-sdk": "^0.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

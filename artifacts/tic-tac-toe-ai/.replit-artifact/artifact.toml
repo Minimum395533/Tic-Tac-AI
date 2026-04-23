@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Tic-Tac-Toe AI"
+version = "1.0.0"
+id = "artifacts/tic-tac-toe-ai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26030
+
+[services.development]
+run = "pnpm --filter @workspace/tic-tac-toe-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/tic-tac-toe-ai", "run", "build" ]
+publicDir = "artifacts/tic-tac-toe-ai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26030"
+BASE_PATH = "/"
