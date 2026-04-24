@@ -1,57 +1,69 @@
 // --- 1. UI STATE MANAGEMENT ---
 // Helper to hide/show forms on login.html
-const toggleForm = (showId) => {
-  const loginForm = document.getElementById('login-form');
-  const signupForm = document.getElementById('signup-form');
-  const choiceDiv = document.getElementById('choice');
+const showSection = (sectionId) => {
+  // Notice 'choice' is REMOVED from this list so it never gets hidden
+  const sections = ['login-form', 'signup-form', 'success', 'Logged-in'];
 
-  // Assuming you have a .hidden class in CSS: .hidden { display: none; }
-  if (loginForm) loginForm.classList.add('hidden');
-  if (signupForm) signupForm.classList.add('hidden');
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden'); 
+  });
 
-  const target = document.getElementById(showId);
-  if (target) target.classList.remove('hidden');
+  // If a valid sectionId is passed, reveal it
+  if (sectionId) {
+    const target = document.getElementById(sectionId);
+    if (target) target.classList.remove('hidden'); 
+  }
 };
 
 // --- 2. AUTHENTICATION (PRO-TIP CHECK) ---
 const checkAuth = async () => {
-  const response = await fetch('/api/me');
-  const loginTab = document.getElementById('Login-tab');
-  const loggedInDiv = document.getElementById('Logged-in');
+  try {
+    const response = await fetch('/api/me');
+    const loginTab = document.getElementById('Login-tab'); // Found on index.html
+    const loggedInDiv = document.getElementById('Logged-in');
 
-  if (response.ok) {
-    const user = await response.json();
-    if (loginTab) loginTab.classList.add('hidden');
-    if (loggedInDiv) {
-      loggedInDiv.classList.remove('hidden');
-      loggedInDiv.innerText = `Hello, ${user.username}`;
+    if (response.ok) {
+      const user = await response.json();
+      // LOGGED IN: Hide login links, show personalized greeting
+      if (loginTab) loginTab.classList.add('hidden');
+      if (loggedInDiv) {
+        loggedInDiv.classList.remove('hidden');
+        loggedInDiv.innerHTML = `<p>Hello, ${user.username}! Go to <a href="index.html">Home</a></p>`;
+      }
+    } else {
+      // NOT LOGGED IN: Ensure the personalized greeting is hidden
+      if (loginTab) loginTab.classList.remove('hidden');
+      if (loggedInDiv) loggedInDiv.classList.add('hidden');
     }
-  } else {
-    if (loginTab) loginTab.classList.remove('hidden');
-    if (loggedInDiv) loggedInDiv.classList.add('hidden');
+  } catch (error) {
+    console.error("Auth check failed", error);
   }
 };
 
 // --- 3. EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
-  // Check auth immediately on page load
+  // 1. Run auth check to handle the "Hello {username}" visibility
   checkAuth();
 
-  // Handle Choice Buttons
-  document.getElementById('login')?.addEventListener('click', () => toggleForm('login-form'));
-  document.getElementById('signup')?.addEventListener('click', () => toggleForm('signup-form'));
+  // 2. INITIAL STATE: Hide all forms, leaving ONLY the #choice buttons visible
+  showSection(null);
 
-  // Handle Signup Submit
+  // 3. Handle Choice Buttons: Swap between login and signup forms
+  document.getElementById('login')?.addEventListener('click', () => showSection('login-form'));
+  document.getElementById('signup')?.addEventListener('click', () => showSection('signup-form'));
+
+  // --- HANDLE SIGNUP ---
   document.getElementById('submit-signup')?.addEventListener('click', async () => {
     const username = document.getElementById('username-new').value;
     const password = document.getElementById('password-new').value;
     const confirm = document.getElementById('confirm-password').value;
     const errorEl = document.getElementById('error-signup');
 
-    // Edge Case: Password Mismatch (Frontend Check)
+    // Frontend Check: Passwords match
     if (password !== confirm) {
       errorEl.innerText = "Passwords do not match!";
-      return;
+      return; 
     }
 
     const res = await fetch('/register', {
@@ -61,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (res.ok) {
-      document.getElementById('success').classList.remove('hidden');
+      showSection('success'); 
       errorEl.innerText = "";
     } else {
       const msg = await res.text();
@@ -69,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Handle Login Submit
+  // --- HANDLE LOGIN ---
   document.getElementById('submit-login')?.addEventListener('click', async () => {
     const username = document.getElementById('username-login').value;
     const password = document.getElementById('password-login').value;
@@ -82,7 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (res.ok) {
-      window.location.href = 'index.html'; // Redirect on success
+      // Reveal the Logged-in div
+      showSection('Logged-in'); 
+
+      // Dynamically inject the username they just typed into the greeting
+      const loggedInDiv = document.getElementById('Logged-in');
+      if (loggedInDiv) {
+        loggedInDiv.innerHTML = `<p>Hello, ${username}! Go to <a href="index.html">Home</a></p>`;
+      }
     } else {
       errorEl.innerText = "Invalid username or password.";
     }
