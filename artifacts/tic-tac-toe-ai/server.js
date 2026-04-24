@@ -3,8 +3,18 @@ const path = require('path');
 const express = require('express');
 const session = require('express-session');
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
+});
+
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
+if (!PORT) {
+  throw new Error('PORT environment variable is required but was not provided.');
+}
 
 // Middleware to parse incoming JSON payloads from your frontend
 app.use(express.json());
