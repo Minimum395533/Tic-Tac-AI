@@ -29,7 +29,7 @@ const checkAuth = async () => {
       if (loginTab) loginTab.classList.add('hidden');
       if (loggedInDiv) {
         loggedInDiv.classList.remove('hidden');
-        loggedInDiv.innerHTML = `<p>Hello, ${user.username}! Go to <a href="index.html">Home</a></p>`;
+        loggedInDiv.innerHTML = `<p>Hello, ${user.username}! `;
       }
     } else {
       // NOT LOGGED IN: Ensure the personalized greeting is hidden
