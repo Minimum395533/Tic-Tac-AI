@@ -38,7 +38,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Helper path to your users file
 const usersFilePath = path.join(__dirname, 'data', 'users.json');
-
+const gamesFilePath = path.join(__dirname, 'data', 'games.json');
 // --- API ROUTES --- //
 
 // GET: Check session status
@@ -96,4 +96,49 @@ app.post('/login', (req, res) => {
 // --- START SERVER --- //
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// POST: Save a completed game
+app.post('/api/save-game', (req, res) => {
+  // 1. SECURITY CHECK: Is the user logged in?
+  if (!req.session.user) {
+    return res.status(401).send('Unauthorized: You must be logged in to save games.');
+  }
+
+  // 2. DATA EXTRACTION: Get game details from the request body
+  const { winner, boardState, moves } = req.body;
+  const username = req.session.user.username;
+
+  // 3. READ EXISTING GAMES
+  let games = [];
+  try {
+    if (fs.existsSync(gamesFilePath)) {
+      const data = fs.readFileSync(gamesFilePath, 'utf8');
+      games = JSON.parse(data || '[]');
+    }
+  } catch (err) {
+    console.error('Error reading games file:', err);
+    return res.status(500).send('Error reading database.');
+  }
+
+  // 4. APPEND NEW GAME
+  const newGame = {
+    id: Date.now(), // Unique ID for the game
+    username: username,
+    winner: winner, // 'X', 'O', or 'Draw'
+    boardState: boardState,
+    moves: moves || [], // For CP10 Time Machine
+    timestamp: new Date().toISOString()
+  };
+
+  games.push(newGame);
+
+  // 5. WRITE BACK TO FILE
+  try {
+    fs.writeFileSync(gamesFilePath, JSON.stringify(games, null, 2));
+    res.status(200).json({ message: 'Game saved successfully!' });
+  } catch (err) {
+    console.error('Error writing games file:', err);
+    res.status(500).send('Error saving game.');
+  }
 });

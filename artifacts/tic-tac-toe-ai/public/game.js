@@ -2,6 +2,7 @@ let boardState = Array(9).fill(null);
 let currentPlayer = 'X';
 let gameActive = false; // The game starts when the "Start" button is clicked
 let isProcessing = false; // Your "Anti-Spam" lock
+let moveHistory = []; // Tracks the sequence of moves
 
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
@@ -11,6 +12,30 @@ const WINNING_COMBINATIONS = [
   [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
   [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
+
+async function saveGame(result) {
+    const payload = {
+        winner: result,      // 'X', 'O', or 'Draw'
+        boardState: boardState,
+        moves: moveHistory
+    };
+
+    try {
+        const response = await fetch('/api/save-game', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            console.log("Game saved to server successfully.");
+        } else {
+            console.error("Failed to save game:", await response.text());
+        }
+    } catch (err) {
+        console.error("Network error while saving game:", err);
+    }
+}
 
 function checkWinner() {
   for (let combo of WINNING_COMBINATIONS) {
@@ -46,6 +71,7 @@ function renderBoard() {
 window.startNewGame = () => {
   // 1. Reset ALL variables to original starting values
   boardState = Array(9).fill(null);
+  moveHistory = [];
   currentPlayer = 'X';      // CRITICAL: Always force back to X
   gameActive = true;        // Re-enable clicking
   isProcessing = false;     // Ensure the lock is off
@@ -88,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-boardElement.addEventListener('click', (event) => {
+boardElement.addEventListener('click', async (event) => {
     // 1. EXIT CHECKS (The Guards)
     if (!gameActive || isProcessing || !event.target.classList.contains('cell')) return;
 
@@ -97,6 +123,10 @@ boardElement.addEventListener('click', (event) => {
 
     // 2. EXECUTION
     isProcessing = true; 
+
+  //this records stuff
+  moveHistory.push({ player: currentPlayer, index: index });
+
     boardState[index] = currentPlayer;
     renderBoard();
 
@@ -106,9 +136,11 @@ boardElement.addEventListener('click', (event) => {
     if (winner) {
         statusElement.innerText = `Player ${winner} Wins!`;
         gameActive = false;
+      await saveGame(winner);
     } else if (boardState.every(cell => cell !== null)) {
         statusElement.innerText = "It's a Draw!";
         gameActive = false;
+      await saveGame('Draw');
     } else {
         currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
         statusElement.innerText = `It's ${currentPlayer}'s turn!`;
