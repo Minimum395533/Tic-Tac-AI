@@ -1,35 +1,27 @@
 [
   {
-    "id": 1777484311094,
+    "id": 1777485210165,
     "username": "Minun61",
-    "winner": "O",
+    "winner": "X",
     "boardState": [
       "X",
       "X",
-      "O",
+      null,
       null,
       "X",
       "O",
-      null,
-      null,
-      "O"
+      "O",
+      "O",
+      "X"
     ],
     "moves": [
-      {
-        "player": "X",
-        "index": "0"
-      },
-      {
-        "player": "O",
-        "index": "2"
-      },
       {
         "player": "X",
         "index": "1"
       },
       {
         "player": "O",
-        "index": "5"
+        "index": "6"
       },
       {
         "player": "X",
@@ -37,9 +29,21 @@
       },
       {
         "player": "O",
+        "index": "7"
+      },
+      {
+        "player": "X",
         "index": "8"
+      },
+      {
+        "player": "O",
+        "index": "4"
+      },
+      {
+        "player": "X",
+        "index": "0"
       }
     ],
-    "timestamp": "2026-04-29T17:38:31.094Z"
+    "timestamp": "2026-04-29T17:53:30.165Z"
   }
 ]

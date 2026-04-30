@@ -4,6 +4,13 @@ const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
 
+// secrets ooooh
+const GROQ_API_KEY = process.env['GROQ_API_KEY'];
+
+if (!GROQ_API_KEY) {
+  console.error("CRITICAL ERROR: GROQ_API_KEY is not defined in Secrets!");
+}
+// end secrets
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err);
 });
