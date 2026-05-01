@@ -113,13 +113,72 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+//ai move stuff for cp-06
+async function triggerAiMove() {
+  // 1. LOCK & LOAD
+  isProcessing = true; 
+  statusElement.innerText = "AI is thinking...";
 
+  try {
+    // 2. THE SERVER REQUEST
+    const response = await fetch('/api/get-ai-move', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ boardState }) // Send current board snapshot
+    });
+
+    if (!response.ok) throw new Error("AI failed to provide a move.");
+
+    const data = await response.json();
+    const aiIndex = data.move;
+
+    // 3. DATA INTEGRITY CHECK
+    // Even if we trust our AI, we never trust the network. 
+    // Ensure the AI didn't pick an occupied spot.
+    if (boardState[aiIndex] !== null) {
+      throw new Error("AI attempted an illegal move.");
+    }
+
+    // 4. UPDATE STATE & HISTORY
+    boardState[aiIndex] = 'O';
+    moveHistory.push({ player: 'O', index: aiIndex });
+
+    // 5. RE-RENDER UI
+    renderBoard();
+
+    // 6. TERMINAL STATE CHECK
+    const winner = checkWinner();
+
+    if (winner) {
+      statusElement.innerText = "AI (O) Wins! Better luck next time.";
+      gameActive = false;
+      await saveGame(winner);
+    } else if (boardState.every(cell => cell !== null)) {
+      statusElement.innerText = "It's a Draw!";
+      gameActive = false;
+      await saveGame('Draw');
+    } else {
+      // 7. HAND CONTROL BACK TO HUMAN
+      currentPlayer = 'X';
+      statusElement.innerText = "Your turn (X)!";
+    }
+
+  } catch (err) {
+    // 8. GRACEFUL FAILURE
+    console.error("AI Move Error:", err);
+    statusElement.innerText = "AI had a brain freeze. Try starting again.";
+    // Note: We don't set gameActive = false here so the user can try again.
+  } finally {
+    // 9. ALWAYS UNLOCK
+    isProcessing = false;
+  }
+}
 boardElement.addEventListener('click', async (event) => {
     // 1. EXIT CHECKS (The Guards)
-    if (!gameActive || isProcessing || !event.target.classList.contains('cell')) return;
+  if (!gameActive || isProcessing || currentPlayer === 'O' || !event.target.classList.contains('cell')) return;
 
-    const index = event.target.getAttribute('data-index');
-    if (boardState[index] !== null) return;
+  const index = event.target.getAttribute('data-index');
+  if (boardState[index] !== null) return;
 
     // 2. EXECUTION
     isProcessing = true; 
@@ -130,7 +189,7 @@ boardElement.addEventListener('click', async (event) => {
     boardState[index] = currentPlayer;
     renderBoard();
 
-    // 3. WIN/DRAW LOGIC (Move your CP-04 code here!)
+    // 3. WIN/DRAW LOGIC 
     const winner = checkWinner();
 
     if (winner) {
@@ -142,8 +201,13 @@ boardElement.addEventListener('click', async (event) => {
         gameActive = false;
       await saveGame('Draw');
     } else {
-        currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
-        statusElement.innerText = `It's ${currentPlayer}'s turn!`;
+       
+      currentPlayer = 'O'; 
+      statusElement.innerText = "AI is thinking...";
+
+      // We do NOT set isProcessing to false here. 
+      // triggerAiMove() will handle unlocking when it finishes.
+      await triggerAiMove();
     }
 
     isProcessing = false;
