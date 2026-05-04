@@ -99,24 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    try {
-      // Verify session with server as fallback
-      const res = await fetch('/api/me');
+    // User is logged in, show the game
+    document.getElementById('game-container').classList.remove('hidden');
+    document.getElementById('board').classList.remove('hidden');
 
-      if (res.ok) {
-        document.getElementById('game-container').classList.remove('hidden');
-        document.getElementById('board').classList.remove('hidden');
-
-        if (typeof window.startNewGame === 'function') {
-          window.startNewGame();
-        } else {
-          console.error("startNewGame function not found in game.js");
-        }
-      } else {
-        alert("Please log in or sign up to play Tic-Tac-Toe AI!");
-      }
-    } catch (error) {
-      console.error("Failed to start game:", error);
+    if (typeof window.startNewGame === 'function') {
+      window.startNewGame();
+    } else {
+      console.error("startNewGame function not found in game.js");
     }
   });
 });
@@ -194,7 +184,7 @@ boardElement.addEventListener('click', async (event) => {
       await saveGame('Draw');
     } else {
         
-      currentPlayer = 'O'; 
+      currentPlayer = 'O';
       statusElement.innerText = "AI is thinking...";
 
       await triggerAiMove();
