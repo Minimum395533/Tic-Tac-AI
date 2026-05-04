@@ -24,9 +24,14 @@ if (!SESSION_SECRET) {
 app.use(express.json());
 app.use(session({
   secret: SESSION_SECRET,
-  resave: false,
+  resave: true,                // Forces session to be saved back to the session store
   saveUninitialized: false,
-  cookie: { maxAge: 60 * 60 * 1000 }
+  rolling: true,               // Resets the cookie expiration on every request
+  cookie: { 
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    httpOnly: true,            // Recommended: Prevents client-side JS from reading the cookie
+    secure: false              // Set to true if using HTTPS
+  }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
