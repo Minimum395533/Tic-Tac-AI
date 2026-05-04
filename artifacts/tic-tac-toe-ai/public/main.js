@@ -1,7 +1,6 @@
 // --- 1. UI STATE MANAGEMENT ---
 // Helper to hide/show forms on login.html
 const showSection = (sectionId) => {
-  // Notice 'choice' is REMOVED from this list so it never gets hidden
   const sections = ['login-form', 'signup-form', 'success', 'Logged-in'];
 
   sections.forEach(id => {
@@ -9,39 +8,98 @@ const showSection = (sectionId) => {
     if (el) el.classList.add('hidden'); 
   });
 
-  // If a valid sectionId is passed, reveal it
   if (sectionId) {
     const target = document.getElementById(sectionId);
     if (target) target.classList.remove('hidden'); 
   }
 };
 
-// --- 2. AUTHENTICATION (PRO-TIP CHECK) ---
+// --- 2. LOGIN STATE PERSISTENCE ---
+const LOGIN_KEY = 'ticTacToeLogin';
+const LOGIN_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+// Save login state to localStorage with expiration
+const saveLoginState = (username) => {
+  const loginData = {
+    username,
+    expiry: Date.now() + LOGIN_DURATION_MS
+  };
+  localStorage.setItem(LOGIN_KEY, JSON.stringify(loginData));
+};
+
+// Check if login state is valid
+const isLoggedIn = () => {
+  const stored = localStorage.getItem(LOGIN_KEY);
+  if (!stored) return false;
+  
+  try {
+    const loginData = JSON.parse(stored);
+    return loginData && loginData.expiry > Date.now();
+  } catch {
+    return false;
+  }
+};
+
+// Get stored username if logged in
+const getLoggedInUsername = () => {
+  const stored = localStorage.getItem(LOGIN_KEY);
+  if (!stored) return null;
+  
+  try {
+    const loginData = JSON.parse(stored);
+    return loginData.expiry > Date.now() ? loginData.username : null;
+  } catch {
+    return null;
+  }
+};
+
+// Clear login state
+const clearLoginState = () => {
+  localStorage.removeItem(LOGIN_KEY);
+};
+
+// --- 3. AUTHENTICATION (PRO-TIP CHECK) ---
 const checkAuth = async () => {
   try {
-    const response = await fetch('/api/me');
-    const loginTab = document.getElementById('Login-tab'); // Found on index.html
+    const loginTab = document.getElementById('Login-tab');
     const loggedInDiv = document.getElementById('Logged-in');
 
-    if (response.ok) {
-      const user = await response.json();
-      // LOGGED IN: Hide login links, show personalized greeting
+    // Check localStorage first
+    const username = getLoggedInUsername();
+    
+    if (username) {
+      // Use stored login state
       if (loginTab) loginTab.classList.add('hidden');
       if (loggedInDiv) {
         loggedInDiv.classList.remove('hidden');
-        loggedInDiv.innerHTML = `<p>Hello, ${user.username}! `;
+        loggedInDiv.innerHTML = `<p>Hello, ${username}! </p>`;
       }
+      return;
+    }
+
+    // Fallback to server check
+    const response = await fetch('/api/me');
+    
+    if (response.ok) {
+      const user = await response.json();
+      if (loginTab) loginTab.classList.add('hidden');
+      if (loggedInDiv) {
+        loggedInDiv.classList.remove('hidden');
+        loggedInDiv.innerHTML = `<p>Hello, ${user.username}! </p>`;
+      }
+      // Save to localStorage for persistence
+      saveLoginState(user.username);
     } else {
-      // NOT LOGGED IN: Ensure the personalized greeting is hidden
       if (loginTab) loginTab.classList.remove('hidden');
       if (loggedInDiv) loggedInDiv.classList.add('hidden');
+      clearLoginState();
     }
   } catch (error) {
     console.error("Auth check failed", error);
   }
 };
 
-// --- 3. EVENT LISTENERS ---
+// --- 4. EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Run auth check to handle the "Hello {username}" visibility
   checkAuth();
@@ -60,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirm = document.getElementById('confirm-password').value;
     const errorEl = document.getElementById('error-signup');
 
-    // Frontend Check: Passwords match
     if (password !== confirm) {
       errorEl.innerText = "Passwords do not match!";
       return; 
@@ -94,10 +151,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (res.ok) {
+      // Save login state for 1 hour
+      saveLoginState(username);
+      
       // Reveal the Logged-in div
       showSection('Logged-in'); 
 
-      // Dynamically inject the username they just typed into the greeting
+      // Inject the username into the greeting
       const loggedInDiv = document.getElementById('Logged-in');
       if (loggedInDiv) {
         loggedInDiv.innerHTML = `<p>Hello, ${username}! Go to <a href="index.html">Home</a></p>`;
