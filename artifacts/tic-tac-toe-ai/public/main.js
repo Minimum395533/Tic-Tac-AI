@@ -16,15 +16,10 @@ const showSection = (sectionId) => {
 
 // --- 2. LOGIN STATE PERSISTENCE ---
 const LOGIN_KEY = 'ticTacToeLogin';
-const LOGIN_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
-// Save login state to localStorage with expiration
+// Save login state to localStorage (forever)
 const saveLoginState = (username) => {
-  const loginData = {
-    username,
-    expiry: Date.now() + LOGIN_DURATION_MS
-  };
-  localStorage.setItem(LOGIN_KEY, JSON.stringify(loginData));
+  localStorage.setItem(LOGIN_KEY, JSON.stringify({ username }));
 };
 
 // Check if login state is valid
@@ -34,7 +29,7 @@ const isLoggedIn = () => {
   
   try {
     const loginData = JSON.parse(stored);
-    return loginData && loginData.expiry > Date.now();
+    return loginData && loginData.username;
   } catch {
     return false;
   }
@@ -47,7 +42,7 @@ const getLoggedInUsername = () => {
   
   try {
     const loginData = JSON.parse(stored);
-    return loginData.expiry > Date.now() ? loginData.username : null;
+    return loginData.username;
   } catch {
     return null;
   }
@@ -58,11 +53,12 @@ const clearLoginState = () => {
   localStorage.removeItem(LOGIN_KEY);
 };
 
-// --- 3. AUTHENTICATION (PRO-TIP CHECK) ---
+// --- 3. AUTHENTICATION ---
 const checkAuth = async () => {
   try {
     const loginTab = document.getElementById('Login-tab');
     const loggedInDiv = document.getElementById('Logged-in');
+    const usernameGreeting = document.getElementById('username-greeting');
 
     // Check localStorage first
     const username = getLoggedInUsername();
@@ -70,10 +66,8 @@ const checkAuth = async () => {
     if (username) {
       // Use stored login state
       if (loginTab) loginTab.classList.add('hidden');
-      if (loggedInDiv) {
-        loggedInDiv.classList.remove('hidden');
-        loggedInDiv.innerHTML = `<p>Hello, ${username}! </p>`;
-      }
+      if (loggedInDiv) loggedInDiv.classList.remove('hidden');
+      if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}!`;
       return;
     }
 
@@ -83,10 +77,8 @@ const checkAuth = async () => {
     if (response.ok) {
       const user = await response.json();
       if (loginTab) loginTab.classList.add('hidden');
-      if (loggedInDiv) {
-        loggedInDiv.classList.remove('hidden');
-        loggedInDiv.innerHTML = `<p>Hello, ${user.username}! </p>`;
-      }
+      if (loggedInDiv) loggedInDiv.classList.remove('hidden');
+      if (usernameGreeting) usernameGreeting.textContent = `Hello, ${user.username}!`;
       // Save to localStorage for persistence
       saveLoginState(user.username);
     } else {
@@ -110,6 +102,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Handle Choice Buttons: Swap between login and signup forms
   document.getElementById('login')?.addEventListener('click', () => showSection('login-form'));
   document.getElementById('signup')?.addEventListener('click', () => showSection('signup-form'));
+
+  // --- HANDLE SIGN OUT ---
+  document.getElementById('signout-button')?.addEventListener('click', () => {
+    clearLoginState();
+    const loginTab = document.getElementById('Login-tab');
+    const loggedInDiv = document.getElementById('Logged-in');
+    
+    if (loginTab) loginTab.classList.remove('hidden');
+    if (loggedInDiv) loggedInDiv.classList.add('hidden');
+    
+    // Redirect to login page or refresh
+    window.location.href = 'login.html';
+  });
 
   // --- HANDLE SIGNUP ---
   document.getElementById('submit-signup')?.addEventListener('click', async () => {
@@ -151,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (res.ok) {
-      // Save login state for 1 hour
+      // Save login state forever
       saveLoginState(username);
       
       // Reveal the Logged-in div
@@ -159,9 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Inject the username into the greeting
       const loggedInDiv = document.getElementById('Logged-in');
-      if (loggedInDiv) {
-        loggedInDiv.innerHTML = `<p>Hello, ${username}! Go to <a href="index.html">Home</a></p>`;
-      }
+      const usernameGreeting = document.getElementById('username-greeting');
+      if (loggedInDiv) loggedInDiv.classList.remove('hidden');
+      if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}! Go to <a href="index.html">Home</a>`;
     } else {
       errorEl.innerText = "Invalid username or password.";
     }
