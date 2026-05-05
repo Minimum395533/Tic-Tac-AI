@@ -43,16 +43,19 @@ const updateAuthUI = (username) => {
   const loggedInDiv = document.getElementById('Logged-in');
   const usernameGreeting = document.getElementById('username-greeting');
   const startGameButton = document.getElementById('start-game-button');
+  const modifiersPanel = document.getElementById('modifiers-panel');
 
   if (username) {
     if (loginTab) loginTab.classList.add('hidden');
     if (loggedInDiv) loggedInDiv.classList.remove('hidden');
     if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}!`;
     if (startGameButton) startGameButton.style.display = 'block';
+    if (modifiersPanel) modifiersPanel.classList.remove('hidden');
   } else {
     if (loginTab) loginTab.classList.remove('hidden');
     if (loggedInDiv) loggedInDiv.classList.add('hidden');
     if (startGameButton) startGameButton.style.display = 'none';
+    if (modifiersPanel) modifiersPanel.classList.add('hidden');
   }
 };
 
@@ -164,6 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const usernameGreeting = document.getElementById('username-greeting');
         if (loggedInDiv) loggedInDiv.classList.remove('hidden');
         if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}! Go to <a href="index.html">Home</a>`;
+        
+        // Show modifiers panel for logged-in users
+        const modifiersPanel = document.getElementById('modifiers-panel');
+        if (modifiersPanel) modifiersPanel.classList.remove('hidden');
       } else {
         errorEl.innerText = "Invalid username or password.";
       }
