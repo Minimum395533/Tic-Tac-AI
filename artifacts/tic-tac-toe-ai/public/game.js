@@ -6,6 +6,23 @@ let moveHistory = []; // Tracks the sequence of moves
 
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
+
+// --- LOGIN STATE PERSISTENCE ---
+const LOGIN_KEY = 'ticTacToeLogin';
+
+// Check if login state is valid (forever)
+const isLoggedIn = () => {
+  const stored = localStorage.getItem(LOGIN_KEY);
+  if (!stored) return false;
+  
+  try {
+    const loginData = JSON.parse(stored);
+    return loginData && loginData.username;
+  } catch {
+    return false;
+  }
+};
+
 //win stuff for cp-04
 const WINNING_COMBINATIONS = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -68,6 +85,7 @@ function renderBoard() {
     boardElement.appendChild(cell);
   });
 }
+
 window.startNewGame = () => {
   // 1. Reset ALL variables to original starting values
   boardState = Array(9).fill(null);
@@ -81,16 +99,26 @@ window.startNewGame = () => {
 
   // 3. Reset the text so it doesn't stay "Player O Wins" or "O's Turn"
   statusElement.innerText = "Game Started! It's X's turn.";
-
-}
+};
 
 // Initialize the visual board on load
 document.addEventListener('DOMContentLoaded', () => {
-  
   // --- HANDLE START GAME (Option B) ---
   document.getElementById('start-game')?.addEventListener('click', async () => {
+    // Check localStorage first for login state
+    if (isLoggedIn()) {
+      document.getElementById('game-container').classList.remove('hidden');
+      document.getElementById('board').classList.remove('hidden');
+      if (typeof window.startNewGame === 'function') {
+        window.startNewGame();
+      } else {
+        console.error("startNewGame function not found in game.js");
+      }
+      return;
+    }
+
+    // Fallback: Check server
     try {
-      // Verify session on click
       const res = await fetch('/api/me');
 
       if (res.ok) {
@@ -110,9 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error("Failed to start game:", error);
+      alert("Please log in or sign up to play Tic-Tac-Toe AI!");
     }
   });
 });
+
 //ai move stuff for cp-06
 async function triggerAiMove() {
   // 1. LOCK & LOAD
@@ -173,6 +203,7 @@ async function triggerAiMove() {
     isProcessing = false;
   }
 }
+
 boardElement.addEventListener('click', async (event) => {
     // 1. EXIT CHECKS (The Guards)
   if (!gameActive || isProcessing || currentPlayer === 'O' || !event.target.classList.contains('cell')) return;
