@@ -1,20 +1,4 @@
-// --- 1. UI STATE MANAGEMENT ---
-// Helper to hide/show forms on login.html
-const showSection = (sectionId) => {
-  const sections = ['login-form', 'signup-form', 'success', 'Logged-in'];
-
-  sections.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('hidden'); 
-  });
-
-  if (sectionId) {
-    const target = document.getElementById(sectionId);
-    if (target) target.classList.remove('hidden'); 
-  }
-};
-
-// --- 2. LOGIN STATE PERSISTENCE ---
+// --- LOGIN STATE PERSISTENCE ---
 const LOGIN_KEY = 'ticTacToeLogin';
 
 // Save login state to localStorage (forever)
@@ -53,22 +37,26 @@ const clearLoginState = () => {
   localStorage.removeItem(LOGIN_KEY);
 };
 
-// --- 3. AUTHENTICATION ---
+// --- UI STATE MANAGEMENT ---
 const updateAuthUI = (username) => {
   const loginTab = document.getElementById('Login-tab');
   const loggedInDiv = document.getElementById('Logged-in');
   const usernameGreeting = document.getElementById('username-greeting');
+  const startGameButton = document.getElementById('start-game-button');
 
   if (username) {
     if (loginTab) loginTab.classList.add('hidden');
     if (loggedInDiv) loggedInDiv.classList.remove('hidden');
     if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}!`;
+    if (startGameButton) startGameButton.style.display = 'block';
   } else {
     if (loginTab) loginTab.classList.remove('hidden');
     if (loggedInDiv) loggedInDiv.classList.add('hidden');
+    if (startGameButton) startGameButton.style.display = 'none';
   }
 };
 
+// --- AUTHENTICATION ---
 const checkAuth = async () => {
   try {
     // Check localStorage first
@@ -96,7 +84,22 @@ const checkAuth = async () => {
   }
 };
 
-// --- 4. EVENT LISTENERS ---
+// --- UI STATE MANAGEMENT FOR LOGIN PAGE ---
+const showSection = (sectionId) => {
+  const sections = ['login-form', 'signup-form', 'success', 'Logged-in'];
+
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden'); 
+  });
+
+  if (sectionId) {
+    const target = document.getElementById(sectionId);
+    if (target) target.classList.remove('hidden'); 
+  }
+};
+
+// --- EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Run auth check to handle the UI visibility
   checkAuth();
@@ -171,7 +174,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('signout-button')?.addEventListener('click', () => {
     clearLoginState();
     updateAuthUI(null);
-    // Redirect to login page or refresh
+    // Redirect to login page
     window.location.href = 'login.html';
   });
+
+  // --- HANDLE START GAME ---
+  document.getElementById('start-game')?.addEventListener('click', () => {
+    if (isLoggedIn()) {
+      document.getElementById('game-container').classList.remove('hidden');
+      document.getElementById('board').classList.remove('hidden');
+      if (typeof window.startNewGame === 'function') {
+        window.startNewGame();
+      } else {
+        console.error("startNewGame function not found in game.js");
+      }
+    } else {
+      alert("Please log in or sign up to play Tic-Tac-Toe AI!");
+    }
+  });
 });
+
+// Expose login functions for game.js if needed
+window.isLoggedIn = isLoggedIn;
