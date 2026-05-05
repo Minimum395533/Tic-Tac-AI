@@ -6,6 +6,7 @@ let moveHistory = []; // Tracks the sequence of moves
 
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
+const aiCommentElement = document.getElementById('ai-comment-text');
 
 //win stuff for cp-04
 const WINNING_COMBINATIONS = [
@@ -83,6 +84,11 @@ window.startNewGame = () => {
 
   // 3. Reset the text so it doesn't stay "Player O Wins" or "O's Turn"
   statusElement.innerText = "Game Started! It's X's turn.";
+  
+  // 4. Reset AI comment
+  if (aiCommentElement) {
+    aiCommentElement.textContent = "Ai is thinking";
+  }
 };
 
 //ai move stuff for cp-06
@@ -128,8 +134,8 @@ async function triggerAiMove() {
     renderBoard();
 
     // 6. Display AI comment if available
-    if (aiComment) {
-      statusElement.innerText = aiComment;
+    if (aiComment && aiCommentElement) {
+      aiCommentElement.textContent = aiComment;
     }
 
     // 7. TERMINAL STATE CHECK
