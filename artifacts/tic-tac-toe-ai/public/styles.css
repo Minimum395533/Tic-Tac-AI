@@ -24,7 +24,47 @@
 .cell:hover {
   background-color: #f0f0f0;
 }
+
 body {
   text-align: center;
   font-family: sans-serif;
+}
+
+/* Modifiers Panel Styling */
+#modifiers-panel {
+  margin: 10px auto;
+  padding: 10px;
+  text-align: center;
+}
+
+#modifiers-panel select {
+  margin: 0 10px;
+  padding: 5px;
+  border: 1px solid #000;
+}
+
+#modifiers-panel label {
+  margin: 0 10px;
+  font-weight: bold;
+}
+
+/* AI Comments Styling */
+#ai-comments {
+  margin: 10px auto;
+  padding: 10px;
+  text-align: center;
+}
+
+#ai-comments label {
+  margin: 0 10px;
+  font-weight: bold;
+}
+
+#ai-comment-text {
+  margin: 10px auto;
+  padding: 10px;
+  border: 1px solid #000;
+  min-height: 20px;
+  width: 300px;
+  text-align: center;
 }
