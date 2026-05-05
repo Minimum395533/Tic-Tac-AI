@@ -85,48 +85,6 @@ window.startNewGame = () => {
   statusElement.innerText = "Game Started! It's X's turn.";
 };
 
-// Initialize the visual board on load
-document.addEventListener('DOMContentLoaded', () => {
-  // --- HANDLE START GAME (Option B) ---
-  document.getElementById('start-game')?.addEventListener('click', async () => {
-    // Check localStorage first for login state
-    if (isLoggedIn()) {
-      document.getElementById('game-container').classList.remove('hidden');
-      document.getElementById('board').classList.remove('hidden');
-      if (typeof window.startNewGame === 'function') {
-        window.startNewGame();
-      } else {
-        console.error("startNewGame function not found in game.js");
-      }
-      return;
-    }
-
-    // Fallback: Check server
-    try {
-      const res = await fetch('/api/me');
-
-      if (res.ok) {
-        // User is authenticated: Handle UI visibility here!
-        document.getElementById('game-container').classList.remove('hidden');
-        document.getElementById('board').classList.remove('hidden');
-
-        // Hand off to game.js to handle the actual game state
-        if (typeof window.startNewGame === 'function') {
-          window.startNewGame();
-        } else {
-          console.error("startNewGame function not found in game.js");
-        }
-      } else {
-        // Not authenticated
-        alert("Please log in or sign up to play Tic-Tac-Toe AI!");
-      }
-    } catch (error) {
-      console.error("Failed to start game:", error);
-      alert("Please log in or sign up to play Tic-Tac-Toe AI!");
-    }
-  });
-});
-
 //ai move stuff for cp-06
 async function triggerAiMove() {
   // 1. LOCK & LOAD
@@ -188,18 +146,21 @@ async function triggerAiMove() {
   }
 }
 
-boardElement.addEventListener('click', async (event) => {
+// Initialize the visual board on load
+document.addEventListener('DOMContentLoaded', () => {
+  // Attach board click handler
+  boardElement.addEventListener('click', async (event) => {
     // 1. EXIT CHECKS (The Guards)
-  if (!gameActive || isProcessing || currentPlayer === 'O' || !event.target.classList.contains('cell')) return;
+    if (!gameActive || isProcessing || currentPlayer === 'O' || !event.target.classList.contains('cell')) return;
 
-  const index = event.target.getAttribute('data-index');
-  if (boardState[index] !== null) return;
+    const index = event.target.getAttribute('data-index');
+    if (boardState[index] !== null) return;
 
     // 2. EXECUTION
     isProcessing = true; 
 
-  //this records stuff
-  moveHistory.push({ player: currentPlayer, index: index });
+    //this records stuff
+    moveHistory.push({ player: currentPlayer, index: index });
 
     boardState[index] = currentPlayer;
     renderBoard();
@@ -210,20 +171,21 @@ boardElement.addEventListener('click', async (event) => {
     if (winner) {
         statusElement.innerText = `Player ${winner} Wins!`;
         gameActive = false;
-      await saveGame(winner);
+        await saveGame(winner);
     } else if (boardState.every(cell => cell !== null)) {
         statusElement.innerText = "It's a Draw!";
         gameActive = false;
-      await saveGame('Draw');
+        await saveGame('Draw');
     } else {
-      
-      currentPlayer = 'O'; 
-      statusElement.innerText = "AI is thinking...";
+        
+        currentPlayer = 'O'; 
+        statusElement.innerText = "AI is thinking...";
 
-      // We do NOT set isProcessing to false here. 
-      // triggerAiMove() will handle unlocking when it finishes.
-      await triggerAiMove();
+        // We do NOT set isProcessing to false here. 
+        // triggerAiMove() will handle unlocking when it finishes.
+        await triggerAiMove();
     }
 
     isProcessing = false;
+  });
 });
