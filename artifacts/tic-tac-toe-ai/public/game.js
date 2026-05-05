@@ -6,7 +6,6 @@ let moveHistory = []; // Tracks the sequence of moves
 
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
-const modifiersPanel = document.getElementById('modifiers-panel');
 
 //win stuff for cp-04
 const WINNING_COMBINATIONS = [
@@ -71,18 +70,6 @@ function renderBoard() {
   });
 }
 
-function showModifiersPanel() {
-  if (modifiersPanel) {
-    modifiersPanel.classList.remove('hidden');
-  }
-}
-
-function hideModifiersPanel() {
-  if (modifiersPanel) {
-    modifiersPanel.classList.add('hidden');
-  }
-}
-
 window.startNewGame = () => {
   // 1. Reset ALL variables to original starting values
   boardState = Array(9).fill(null);
@@ -96,9 +83,6 @@ window.startNewGame = () => {
 
   // 3. Reset the text so it doesn't stay "Player O Wins" or "O's Turn"
   statusElement.innerText = "Game Started! It's X's turn.";
-  
-  // 4. Hide modifiers panel during game
-  hideModifiersPanel();
 };
 
 //ai move stuff for cp-06
@@ -155,12 +139,10 @@ async function triggerAiMove() {
       statusElement.innerText = "AI (O) Wins! Better luck next time.";
       gameActive = false;
       await saveGame(winner);
-      showModifiersPanel();
     } else if (boardState.every(cell => cell !== null)) {
       statusElement.innerText = "It's a Draw!";
       gameActive = false;
       await saveGame('Draw');
-      showModifiersPanel();
     } else {
       // 8. HAND CONTROL BACK TO HUMAN
       currentPlayer = 'X';
@@ -171,7 +153,6 @@ async function triggerAiMove() {
     // 9. GRACEFUL FAILURE
     console.error("AI Move Error:", err);
     statusElement.innerText = "AI had a brain freeze. Try starting again.";
-    // Note: We don't set gameActive = false here so the user can try again.
   } finally {
     // 10. ALWAYS UNLOCK
     isProcessing = false;
@@ -180,9 +161,6 @@ async function triggerAiMove() {
 
 // Initialize the visual board on load
 document.addEventListener('DOMContentLoaded', () => {
-  // Show modifiers panel initially (before game starts)
-  showModifiersPanel();
-
   // Attach board click handler
   boardElement.addEventListener('click', async (event) => {
     // 1. EXIT CHECKS (The Guards)
@@ -207,12 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
         statusElement.innerText = `Player ${winner} Wins!`;
         gameActive = false;
         await saveGame(winner);
-        showModifiersPanel();
     } else if (boardState.every(cell => cell !== null)) {
         statusElement.innerText = "It's a Draw!";
         gameActive = false;
         await saveGame('Draw');
-        showModifiersPanel();
     } else {
         
         currentPlayer = 'O'; 
