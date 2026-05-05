@@ -7,22 +7,6 @@ let moveHistory = []; // Tracks the sequence of moves
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
 
-// --- LOGIN STATE PERSISTENCE ---
-const LOGIN_KEY = 'ticTacToeLogin';
-
-// Check if login state is valid (forever)
-const isLoggedIn = () => {
-  const stored = localStorage.getItem(LOGIN_KEY);
-  if (!stored) return false;
-  
-  try {
-    const loginData = JSON.parse(stored);
-    return loginData && loginData.username;
-  } catch {
-    return false;
-  }
-};
-
 //win stuff for cp-04
 const WINNING_COMBINATIONS = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
