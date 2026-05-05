@@ -4,6 +4,12 @@ let gameActive = false;
 let isProcessing = false;
 let moveHistory = [];
 
+const WINNING_COMBINATIONS = [
+  [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+  [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+  [0, 4, 8], [2, 4, 6]             // Diagonals
+];
+
 // --- LOGIN STATE PERSISTENCE CHECK ---
 const LOGIN_KEY = 'ticTacToeLogin';
 
@@ -18,12 +24,6 @@ const isLoggedIn = () => {
     return false;
   }
 };
-
-const WINNING_COMBINATIONS = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-  [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-  [0, 4, 8], [2, 4, 6]             // Diagonals
-];
 
 async function saveGame(result) {
     const payload = {
@@ -59,7 +59,10 @@ function checkWinner() {
   return null;
 }
 
-function renderBoard(boardElement, statusElement) {
+function renderBoard() {
+  const boardElement = document.getElementById('board');
+  const statusElement = document.getElementById('status');
+  
   boardElement.innerHTML = '';
 
   boardState.forEach((cellValue, index) => {
@@ -71,40 +74,55 @@ function renderBoard(boardElement, statusElement) {
   });
 }
 
-function startNewGame(boardElement, statusElement) {
+function startNewGame() {
+  const statusElement = document.getElementById('status');
+  
   boardState = Array(9).fill(null);
   moveHistory = [];
   currentPlayer = 'X';
   gameActive = true;
   isProcessing = false;
 
-  renderBoard(boardElement, statusElement);
+  renderBoard();
   statusElement.innerText = "Game Started! It's X's turn.";
 }
 
 // Initialize everything after DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   const boardElement = document.getElementById('board');
-  const statusElement = document.getElementById('status');
   const gameContainer = document.getElementById('game-container');
 
-  // Attach start game button handler
-  document.getElementById('start-game')?.addEventListener('click', () => {
-    if (!isLoggedIn()) {
-      alert("Please log in or sign up to play Tic-Tac-Toe AI!");
+  // --- HANDLE START GAME ---
+  document.getElementById('start-game')?.addEventListener('click', async () => {
+    // Check localStorage first
+    if (isLoggedIn()) {
+      gameContainer.classList.remove('hidden');
+      boardElement.classList.remove('hidden');
+      startNewGame();
       return;
     }
 
-    // Show game UI
-    gameContainer.classList.remove('hidden');
-    boardElement.classList.remove('hidden');
-
-    // Start the game
-    startNewGame(boardElement, statusElement);
+    // Fallback: Check server
+    try {
+      const res = await fetch('/api/me');
+      
+      if (res.ok) {
+        gameContainer.classList.remove('hidden');
+        boardElement.classList.remove('hidden');
+        startNewGame();
+      } else {
+        alert("Please log in or sign up to play Tic-Tac-Toe AI!");
+      }
+    } catch (error) {
+      console.error("Failed to start game:", error);
+      alert("Please log in or sign up to play Tic-Tac-Toe AI!");
+    }
   });
 
   // Attach board click handler
   boardElement.addEventListener('click', async (event) => {
+    const statusElement = document.getElementById('status');
+    
     if (!gameActive || isProcessing || currentPlayer === 'O' || !event.target.classList.contains('cell')) return;
 
     const index = event.target.getAttribute('data-index');
@@ -113,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isProcessing = true; 
     moveHistory.push({ player: currentPlayer, index: index });
     boardState[index] = currentPlayer;
-    renderBoard(boardElement, statusElement);
+    renderBoard();
 
     const winner = checkWinner();
 
@@ -128,14 +146,16 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         currentPlayer = 'O';
         statusElement.innerText = "AI is thinking...";
-        await triggerAiMove(boardElement, statusElement);
+        await triggerAiMove();
     }
 
     isProcessing = false;
   });
 
-  // AI move function (now accepts boardElement and statusElement)
-  window.triggerAiMove = async (boardElement, statusElement) => {
+  // AI move function
+  async function triggerAiMove() {
+    const statusElement = document.getElementById('status');
+    
     isProcessing = true; 
     statusElement.innerText = "AI is thinking...";
 
@@ -157,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       boardState[aiIndex] = 'O';
       moveHistory.push({ player: 'O', index: aiIndex });
-      renderBoard(boardElement, statusElement);
+      renderBoard();
 
       const winner = checkWinner();
 
@@ -179,8 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       isProcessing = false;
     }
-  };
+  }
 
   // Expose startNewGame globally for compatibility
-  window.startNewGame = () => startNewGame(boardElement, statusElement);
+  window.startNewGame = startNewGame;
 });
