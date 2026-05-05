@@ -6,6 +6,7 @@ let moveHistory = []; // Tracks the sequence of moves
 
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
+const modifiersPanel = document.getElementById('modifiers-panel');
 
 //win stuff for cp-04
 const WINNING_COMBINATIONS = [
@@ -70,6 +71,18 @@ function renderBoard() {
   });
 }
 
+function showModifiersPanel() {
+  if (modifiersPanel) {
+    modifiersPanel.classList.remove('hidden');
+  }
+}
+
+function hideModifiersPanel() {
+  if (modifiersPanel) {
+    modifiersPanel.classList.add('hidden');
+  }
+}
+
 window.startNewGame = () => {
   // 1. Reset ALL variables to original starting values
   boardState = Array(9).fill(null);
@@ -83,6 +96,9 @@ window.startNewGame = () => {
 
   // 3. Reset the text so it doesn't stay "Player O Wins" or "O's Turn"
   statusElement.innerText = "Game Started! It's X's turn.";
+  
+  // 4. Hide modifiers panel during game
+  hideModifiersPanel();
 };
 
 //ai move stuff for cp-06
@@ -91,18 +107,27 @@ async function triggerAiMove() {
   isProcessing = true; 
   statusElement.innerText = "AI is thinking...";
 
+  // Get selected difficulty and personality
+  const difficulty = document.getElementById('difficulty')?.value || 'medium';
+  const personality = document.getElementById('personality')?.value || 'friendly';
+
   try {
     // 2. THE SERVER REQUEST
     const response = await fetch('/api/get-ai-move', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ boardState }) // Send current board snapshot
+      body: JSON.stringify({ 
+        boardState,
+        difficulty,
+        personality 
+      }) // Send current board snapshot with modifiers
     });
 
     if (!response.ok) throw new Error("AI failed to provide a move.");
 
     const data = await response.json();
     const aiIndex = data.move;
+    const aiComment = data.comment;
 
     // 3. DATA INTEGRITY CHECK
     // Even if we trust our AI, we never trust the network. 
@@ -118,36 +143,46 @@ async function triggerAiMove() {
     // 5. RE-RENDER UI
     renderBoard();
 
-    // 6. TERMINAL STATE CHECK
+    // 6. Display AI comment if available
+    if (aiComment) {
+      statusElement.innerText = aiComment;
+    }
+
+    // 7. TERMINAL STATE CHECK
     const winner = checkWinner();
 
     if (winner) {
       statusElement.innerText = "AI (O) Wins! Better luck next time.";
       gameActive = false;
       await saveGame(winner);
+      showModifiersPanel();
     } else if (boardState.every(cell => cell !== null)) {
       statusElement.innerText = "It's a Draw!";
       gameActive = false;
       await saveGame('Draw');
+      showModifiersPanel();
     } else {
-      // 7. HAND CONTROL BACK TO HUMAN
+      // 8. HAND CONTROL BACK TO HUMAN
       currentPlayer = 'X';
       statusElement.innerText = "Your turn (X)!";
     }
 
   } catch (err) {
-    // 8. GRACEFUL FAILURE
+    // 9. GRACEFUL FAILURE
     console.error("AI Move Error:", err);
     statusElement.innerText = "AI had a brain freeze. Try starting again.";
     // Note: We don't set gameActive = false here so the user can try again.
   } finally {
-    // 9. ALWAYS UNLOCK
+    // 10. ALWAYS UNLOCK
     isProcessing = false;
   }
 }
 
 // Initialize the visual board on load
 document.addEventListener('DOMContentLoaded', () => {
+  // Show modifiers panel initially (before game starts)
+  showModifiersPanel();
+
   // Attach board click handler
   boardElement.addEventListener('click', async (event) => {
     // 1. EXIT CHECKS (The Guards)
@@ -172,10 +207,12 @@ document.addEventListener('DOMContentLoaded', () => {
         statusElement.innerText = `Player ${winner} Wins!`;
         gameActive = false;
         await saveGame(winner);
+        showModifiersPanel();
     } else if (boardState.every(cell => cell !== null)) {
         statusElement.innerText = "It's a Draw!";
         gameActive = false;
         await saveGame('Draw');
+        showModifiersPanel();
     } else {
         
         currentPlayer = 'O'; 
@@ -189,4 +226,3 @@ document.addEventListener('DOMContentLoaded', () => {
     isProcessing = false;
   });
 });
-//cp-06 time lets fucking gooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
