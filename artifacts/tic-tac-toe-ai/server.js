@@ -153,7 +153,7 @@ app.post('/api/get-ai-move', async (req, res) => {
       const systemPrompt = `YOU ARE A TIC-TAC-TOE AI. YOU MUST RESPOND WITH VALID JSON ONLY.
 
               FORMAT REQUIREMENT: Your response MUST be a JSON object with exactly these two fields:
-              {"move": <number>, "comment": "a tic tac toe related pun"}
+              {"move": <number>, "comment": <a tic tac toe related pun>}
 
               NEVER respond with plain text. NEVER add explanations. NEVER add formatting. ONLY JSON.
               
