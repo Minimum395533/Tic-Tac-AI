@@ -160,27 +160,35 @@ app.post('/api/get-ai-move', async (req, res) => {
           messages: [
             {
               role: "system",
-              content: `You are an expert Tic-Tac-Toe AI playing as 'O'. The opponent is 'X'.
+              content: `YOU ARE A TIC-TAC-TOE AI. YOU MUST RESPOND WITH VALID JSON ONLY.
+              
+              FORMAT REQUIREMENT: Your response MUST be a JSON object with exactly these two fields:
+              {"move": <number>, "comment": "a tic tac toe related pun"}
+              
+              NEVER respond with plain text. NEVER add explanations. NEVER add formatting. ONLY JSON.
+              
+              ---
+              You are playing as 'O'. The opponent is 'X'.
               The board indices are 0-8. The winning combinations are: ${winningLines}.
-
+              
               DIFFICULTY: ${difficultyPrompt}
-
-              CRITICAL STRATEGY TO FOLLOW IN ORDER:
+              
+              STRATEGY IN ORDER:
               1. WIN: If 'O' has two pieces in a winning combination and the third is empty, pick the empty spot.
               2. BLOCK: If 'X' has two pieces in a winning combination and the third is empty, you MUST pick the empty spot to block them.
               3. CENTER: If index 4 is empty, take it.
-              4. CORNERS: Prefer indices 0, 2, 6, or 8, but only if they don't put you in a losing position.
-
-              You MUST respond with a valid JSON object in this EXACT format: {"move": <index>, "comment": "a tic tac toe related pun"}
-              Replace <index> with a number from [${availableSpots.join(', ')}].
-              The comment should be a tic tac toe related pun.`
+              4. CORNERS: Prefer indices 0, 2, 6, or 8.
+              5. EDGES: Take any remaining edge as a last resort.
+              
+              AVAILABLE MOVES: [${availableSpots.join(', ')}]
+              REMEMBER: Respond ONLY with valid JSON: {"move": <your_move>, "comment": "your_pun"}`
             },
             {
               role: "user",
-              content: `Board: ${JSON.stringify(boardState)}. Legal moves: ${availableSpots.join(', ')}. Respond with JSON: {"move": <your_move>, "comment": "your_pun"}`
+              content: `Board: ${JSON.stringify(boardState)}. Your move. Respond with JSON ONLY: {"move": <index>, "comment": "pun"}`
             }
           ],
-          temperature: 0.1 + (attempt * 0.1)
+          temperature: 0.1
         })
       });
 
@@ -193,6 +201,7 @@ app.post('/api/get-ai-move', async (req, res) => {
 
       const content = data.choices[0].message.content.trim();
       
+      // Try to parse as JSON first
       try {
         const aiResponse = JSON.parse(content);
         const move = parseInt(aiResponse.move);
@@ -206,7 +215,18 @@ app.post('/api/get-ai-move', async (req, res) => {
           console.warn(`Attempt ${attempt} - AI picked illegal move: ${move}`);
         }
       } catch (e) {
-        console.warn(`Attempt ${attempt} - Invalid JSON response: ${content}`);
+        // If JSON parse fails, try to extract a number from the response
+        console.warn(`Attempt ${attempt} - Invalid JSON: ${content}`);
+        const numberMatch = content.match(/\b([0-8])\b/);
+        if (numberMatch) {
+          const move = parseInt(numberMatch[1]);
+          if (availableSpots.includes(move)) {
+            return res.json({ 
+              move: move,
+              comment: "a tic tac toe related pun"
+            });
+          }
+        }
       }
     } catch (error) {
       console.error(`Attempt ${attempt} - Network error:`, error);
