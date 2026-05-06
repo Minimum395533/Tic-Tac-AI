@@ -24,13 +24,13 @@ if (!SESSION_SECRET) {
 app.use(express.json());
 app.use(session({
   secret: SESSION_SECRET,
-  resave: true,                // Forces session to be saved back to the session store
+  resave: true,
   saveUninitialized: false,
-  rolling: true,               // Resets the cookie expiration on every request
+  rolling: true,
   cookie: { 
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-    httpOnly: true,            // Recommended: Prevents client-side JS from reading the cookie
-    secure: false              // Set to true if using HTTPS
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: false
   }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -44,7 +44,6 @@ app.get('/api/me', (req, res) => {
   res.status(401).send('Unauthorized');
 });
 
-// Restored from original file
 app.post('/register', (req, res) => {
   const { username, password } = req.body;
 
@@ -65,7 +64,6 @@ app.post('/register', (req, res) => {
   res.sendStatus(200);
 });
 
-// Restored from original file
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -115,13 +113,11 @@ app.post('/api/save-game', (req, res) => {
   }
 });
 
-// --- NEW: AI MOVE ROUTE (CP06) ---
-// --- NEW: AI MOVE ROUTE (WITH RETRY LOGIC) ---
-// --- NEW: SUPERCHARGED AI MOVE ROUTE (CP06) ---
+// --- AI MOVE ROUTE (CP07) ---
 app.post('/api/get-ai-move', async (req, res) => {
   if (!req.session.user) return res.status(401).send('Unauthorized');
 
-  const { boardState } = req.body;
+  const { boardState, difficulty, personality } = req.body;
   const MAX_RETRIES = 3;
 
   const availableSpots = boardState
@@ -132,7 +128,6 @@ app.post('/api/get-ai-move', async (req, res) => {
     return res.status(400).json({ error: "No available spots left." });
   }
 
-  // Define the winning lines so the AI knows what a "Win" looks like
   const winningLines = `[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]`;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -157,15 +152,16 @@ app.post('/api/get-ai-move', async (req, res) => {
               3. CENTER: If index 4 is empty, take it.
               4. CORNERS: Prefer indices 0, 2, 6, or 8, but only if they don't put you in a losing position.
 
-              You MUST choose exactly ONE number from this list: [${availableSpots.join(', ')}].
-              Respond with ONLY the integer. No text, no formatting.`
+              You MUST respond with a valid JSON object in this EXACT format: {"move": <index>, "comment": "a tic tac toe related pun"}
+              Replace <index> with a number from [${availableSpots.join(', ')}].
+              The comment should be a tic tac toe related pun.`
             },
             {
               role: "user",
-              content: `Board array: ${JSON.stringify(boardState)}. Your legal moves are ${availableSpots.join(', ')}. What is your highly strategic move?`
+              content: `Board: ${JSON.stringify(boardState)}. Legal moves: ${availableSpots.join(', ')}. Respond with JSON: {"move": <your_move>, "comment": "your_pun"}`
             }
           ],
-          temperature: 0.1 + (attempt * 0.1) // Keep temperature low so it relies on logic, not creativity
+          temperature: 0.1 + (attempt * 0.1)
         })
       });
 
@@ -177,24 +173,36 @@ app.post('/api/get-ai-move', async (req, res) => {
       }
 
       const content = data.choices[0].message.content.trim();
-      const move = parseInt(content);
-
-      if (!isNaN(move) && availableSpots.includes(move)) {
-        return res.json({ move });
-      } else {
-        console.warn(`Attempt ${attempt} - AI picked illegal move: ${content}`);
+      
+      try {
+        const aiResponse = JSON.parse(content);
+        const move = parseInt(aiResponse.move);
+        
+        if (!isNaN(move) && availableSpots.includes(move)) {
+          return res.json({ 
+            move: move,
+            comment: aiResponse.comment || "a tic tac toe related pun"
+          });
+        } else {
+          console.warn(`Attempt ${attempt} - AI picked illegal move: ${move}`);
+        }
+      } catch (e) {
+        console.warn(`Attempt ${attempt} - Invalid JSON response: ${content}`);
       }
     } catch (error) {
       console.error(`Attempt ${attempt} - Network error:`, error);
     }
   }
 
-  console.log("AI failed to pick a valid move after 3 tries. Falling back to a random legal move.");
+  console.log("AI failed after 3 tries. Using random move with placeholder comment.");
   const randomFallbackMove = availableSpots[Math.floor(Math.random() * availableSpots.length)];
-  res.json({ move: randomFallbackMove });
+  res.json({ 
+    move: randomFallbackMove,
+    comment: "a tic tac toe related pun"
+  });
 });
 
-// --- START SERVER (Fixed Placement) ---
+// --- START SERVER ---
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
