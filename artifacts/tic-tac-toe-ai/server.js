@@ -149,22 +149,12 @@ app.post('/api/get-ai-move', async (req, res) => {
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            {
-              role: "system",
-              content: `YOU ARE A TIC-TAC-TOE AI. YOU MUST RESPOND WITH VALID JSON ONLY.
-              
+      // Build the system and user prompts
+      const systemPrompt = `YOU ARE A TIC-TAC-TOE AI. YOU MUST RESPOND WITH VALID JSON ONLY.
+
               FORMAT REQUIREMENT: Your response MUST be a JSON object with exactly these two fields:
               {"move": <number>, "comment": "a tic tac toe related pun"}
-              
+
               NEVER respond with plain text. NEVER add explanations. NEVER add formatting. ONLY JSON.
               
               ---
@@ -181,11 +171,31 @@ app.post('/api/get-ai-move', async (req, res) => {
               5. EDGES: Take any remaining edge as a last resort.
               
               AVAILABLE MOVES: [${availableSpots.join(', ')}]
-              REMEMBER: Respond ONLY with valid JSON: {"move": <your_move>, "comment": "your_pun"}`
+              REMEMBER: Respond ONLY with valid JSON: {"move": <your_move>, "comment": "your_pun"}`;
+
+      const userPrompt = `Board: ${JSON.stringify(boardState)}. Your move. Respond with JSON ONLY: {"move": <index>, "comment": "pun"}`;
+
+      // Log the exact prompts for debugging
+      console.log("=== AI PROMPT (Attempt " + attempt + ") ===");
+      console.log("SYSTEM PROMPT:", systemPrompt);
+      console.log("USER PROMPT:", userPrompt);
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt
             },
             {
               role: "user",
-              content: `Board: ${JSON.stringify(boardState)}. Your move. Respond with JSON ONLY: {"move": <index>, "comment": "pun"}`
+              content: userPrompt
             }
           ],
           temperature: 0.1
@@ -201,12 +211,18 @@ app.post('/api/get-ai-move', async (req, res) => {
 
       const content = data.choices[0].message.content.trim();
       
+      // Log the AI's raw output for debugging
+      console.log("=== AI RAW OUTPUT (Attempt " + attempt + ") ===");
+      console.log("AI RESPONSE:", content);
+      
       // Try to parse as JSON first
       try {
         const aiResponse = JSON.parse(content);
         const move = parseInt(aiResponse.move);
         
         if (!isNaN(move) && availableSpots.includes(move)) {
+          console.log("=== AI MOVE SELECTED ===");
+          console.log("Move:", move, "Comment:", aiResponse.comment);
           return res.json({ 
             move: move,
             comment: aiResponse.comment || "a tic tac toe related pun"
@@ -221,6 +237,8 @@ app.post('/api/get-ai-move', async (req, res) => {
         if (numberMatch) {
           const move = parseInt(numberMatch[1]);
           if (availableSpots.includes(move)) {
+            console.log("=== FALLBACK MOVE EXTRACTED ===");
+            console.log("Extracted move:", move);
             return res.json({ 
               move: move,
               comment: "a tic tac toe related pun"
@@ -233,7 +251,8 @@ app.post('/api/get-ai-move', async (req, res) => {
     }
   }
 
-  console.log("AI failed after 3 tries. Using random move with placeholder comment.");
+  console.log("=== FINAL FALLBACK ===");
+  console.log("AI failed after 3 tries. Using random move.");
   const randomFallbackMove = availableSpots[Math.floor(Math.random() * availableSpots.length)];
   res.json({ 
     move: randomFallbackMove,
