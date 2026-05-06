@@ -130,6 +130,23 @@ app.post('/api/get-ai-move', async (req, res) => {
 
   const winningLines = `[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]`;
 
+  // Set difficulty-specific system prompt
+  let difficultyPrompt = "";
+  switch (difficulty) {
+    case "easy":
+      difficultyPrompt = "You should be easily beatable by anyone of any skill level. Occasionally make suboptimal moves or miss blocking opportunities.";
+      break;
+    case "medium":
+      difficultyPrompt = "You are to play Tic-Tac-Toe at an average level, being sufficiently challenging but still beatable. Make mostly good moves but occasionally miss optimal plays.";
+      break;
+    case "hard":
+    case "expert":
+      difficultyPrompt = "You are an unbeatable Tic-Tac-Toe AI. You never lose a game EVER. Always win if possible, otherwise force a draw. You must: 1) Win if you have two in a row with an open third spot. 2) Block if the opponent has two in a row with an open third spot. 3) Take the center if available. 4) Take a corner if available. 5) Take an edge as a last resort.";
+      break;
+    default:
+      difficultyPrompt = "You are an unbeatable Tic-Tac-Toe AI. You never lose a game EVER. Always win if possible, otherwise force a draw.";
+  }
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -143,8 +160,10 @@ app.post('/api/get-ai-move', async (req, res) => {
           messages: [
             {
               role: "system",
-              content: `You are an expert, unbeatable Tic-Tac-Toe AI playing as 'O'. The opponent is 'X'.
+              content: `You are an expert Tic-Tac-Toe AI playing as 'O'. The opponent is 'X'.
               The board indices are 0-8. The winning combinations are: ${winningLines}.
+
+              DIFFICULTY: ${difficultyPrompt}
 
               CRITICAL STRATEGY TO FOLLOW IN ORDER:
               1. WIN: If 'O' has two pieces in a winning combination and the third is empty, pick the empty spot.
