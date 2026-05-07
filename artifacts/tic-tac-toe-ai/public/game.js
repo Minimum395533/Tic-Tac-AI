@@ -167,6 +167,34 @@ async function triggerAiMove() {
 
 // Initialize the visual board on load
 document.addEventListener('DOMContentLoaded', () => {
+  // --- HANDLE START GAME ---
+  document.getElementById('start-game')?.addEventListener('click', async () => {
+    // Check localStorage first for login state
+    const loggedIn = isLoggedIn();
+
+    if (!loggedIn) {
+      // Fallback: verify with server
+      try {
+        const res = await fetch('/api/me');
+        if (!res.ok) {
+          alert('Please log in or sign up to play Tic-Tac-Toe AI!');
+          return;
+        }
+        const user = await res.json();
+        saveLoginState(user.username);
+      } catch {
+        alert('Please log in or sign up to play Tic-Tac-Toe AI!');
+        return;
+      }
+    }
+
+    // Show game UI
+    document.getElementById('modifiers-panel').classList.remove('hidden');
+    document.getElementById('game-container').classList.remove('hidden');
+    document.getElementById('board').classList.remove('hidden');
+    window.startNewGame();
+  });
+
   // Attach board click handler
   boardElement.addEventListener('click', async (event) => {
     // 1. EXIT CHECKS (The Guards)

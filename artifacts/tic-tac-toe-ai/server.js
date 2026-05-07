@@ -14,7 +14,10 @@ process.on('uncaughtException', (err) => console.error('Uncaught exception:', er
 process.on('unhandledRejection', (reason) => console.error('Unhandled rejection:', reason));
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
+if (!PORT) {
+  throw new Error('PORT environment variable is required but was not provided.');
+}
 const SESSION_SECRET = process.env.SESSION_SECRET;
 
 if (!SESSION_SECRET) {
