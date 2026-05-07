@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loggedInDiv = document.getElementById('Logged-in');
         const usernameGreeting = document.getElementById('username-greeting');
         if (loggedInDiv) loggedInDiv.classList.remove('hidden');
-        if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}! Go to <a href="index.html">Home</a>`;
+        if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}!`;
         
         // Show modifiers panel for logged-in users
         const modifiersPanel = document.getElementById('modifiers-panel');
