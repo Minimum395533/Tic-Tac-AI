@@ -44,6 +44,14 @@ nav a:hover, nav button:hover {
   color: #0066cc;
 }
 
+/* Login Prompt Styling */
+#login-prompt {
+  font-size: 1.5rem;
+  margin: 40px 0;
+  color: #666;
+  text-align: center;
+}
+
 /* Game Board Styling */
 #board {
   display: grid;
@@ -115,4 +123,23 @@ body {
   min-height: 20px;
   width: 300px;
   text-align: center;
+}
+
+/* Start Game Button Styling */
+#start-game-button {
+  margin: 20px 0;
+}
+
+#start-game-button button {
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#start-game-button button:hover {
+  background-color: #45a049;
 }
