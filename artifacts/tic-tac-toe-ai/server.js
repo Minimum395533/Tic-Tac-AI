@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 
 // --- SECRETS ---
 const GROQ_API_KEY = process.env['GROQ_API_KEY'];
@@ -21,10 +22,17 @@ if (!SESSION_SECRET) {
   throw new Error('SESSION_SECRET environment variable is required.');
 }
 
+// Ensure sessions directory exists
+const sessionsDir = path.join(__dirname, 'sessions');
+if (!fs.existsSync(sessionsDir)) {
+  fs.mkdirSync(sessionsDir, { recursive: true });
+}
+
 app.use(express.json());
 app.use(session({
+  store: new FileStore({ path: sessionsDir, ttl: 7 * 24 * 60 * 60, reapInterval: 60 * 60 }),
   secret: SESSION_SECRET,
-  resave: true,
+  resave: false,
   saveUninitialized: false,
   rolling: true,
   cookie: { 
