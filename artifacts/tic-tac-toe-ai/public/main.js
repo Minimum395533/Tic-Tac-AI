@@ -41,7 +41,6 @@ const clearLoginState = () => {
 const updateAuthUI = (username) => {
   const loginTab = document.getElementById('Login-tab');
   const loggedInDiv = document.getElementById('Logged-in');
-  const usernameGreeting = document.getElementById('username-greeting');
   const startGameButton = document.getElementById('start-game-button');
   const modifiersPanel = document.getElementById('modifiers-panel');
   const loginPrompt = document.getElementById('login-prompt');
@@ -49,7 +48,6 @@ const updateAuthUI = (username) => {
   if (username) {
     if (loginTab) loginTab.classList.add('hidden');
     if (loggedInDiv) loggedInDiv.classList.remove('hidden');
-    if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}!`;
     if (startGameButton) startGameButton.classList.remove('hidden');
     if (modifiersPanel) modifiersPanel.classList.remove('hidden');
     if (loginPrompt) loginPrompt.classList.add('hidden');
@@ -165,12 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reveal the Logged-in div
         showSection('Logged-in'); 
 
-        // Inject the username into the greeting
-        const loggedInDiv = document.getElementById('Logged-in');
-        const usernameGreeting = document.getElementById('username-greeting');
-        if (loggedInDiv) loggedInDiv.classList.remove('hidden');
-        if (usernameGreeting) usernameGreeting.textContent = `Hello, ${username}!`;
-        
         // Show modifiers panel for logged-in users
         const modifiersPanel = document.getElementById('modifiers-panel');
         if (modifiersPanel) modifiersPanel.classList.remove('hidden');
@@ -178,6 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide login prompt
         const loginPrompt = document.getElementById('login-prompt');
         if (loginPrompt) loginPrompt.classList.add('hidden');
+        
+        // Redirect to home page after successful login
+        window.location.href = 'index.html';
       } else {
         errorEl.innerText = "Invalid username or password.";
       }
