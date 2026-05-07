@@ -44,6 +44,7 @@ const updateAuthUI = (username) => {
   const startGameButton = document.getElementById('start-game-button');
   const modifiersPanel = document.getElementById('modifiers-panel');
   const loginPrompt = document.getElementById('login-prompt');
+  const welcomeMessage = document.getElementById('welcome-message');
 
   if (username) {
     if (loginTab) loginTab.classList.add('hidden');
@@ -51,12 +52,17 @@ const updateAuthUI = (username) => {
     if (startGameButton) startGameButton.classList.remove('hidden');
     if (modifiersPanel) modifiersPanel.classList.remove('hidden');
     if (loginPrompt) loginPrompt.classList.add('hidden');
+    if (welcomeMessage) {
+      welcomeMessage.textContent = `Hello, ${username}!`;
+      welcomeMessage.classList.remove('hidden');
+    }
   } else {
     if (loginTab) loginTab.classList.remove('hidden');
     if (loggedInDiv) loggedInDiv.classList.add('hidden');
     if (startGameButton) startGameButton.classList.add('hidden');
     if (modifiersPanel) modifiersPanel.classList.add('hidden');
     if (loginPrompt) loginPrompt.classList.remove('hidden');
+    if (welcomeMessage) welcomeMessage.classList.add('hidden');
   }
 };
 
@@ -162,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Reveal the Logged-in div
         showSection('Logged-in'); 
-
+        
         // Show modifiers panel for logged-in users
         const modifiersPanel = document.getElementById('modifiers-panel');
         if (modifiersPanel) modifiersPanel.classList.remove('hidden');
