@@ -147,13 +147,29 @@ app.post('/api/get-ai-move', async (req, res) => {
       difficultyPrompt = "You are an unbeatable Tic-Tac-Toe AI. You never lose a game EVER. Always win if possible, otherwise force a draw.";
   }
 
+  // Set personality-specific comment style
+  let personalityPrompt = "";
+  switch (personality) {
+    case "jokester":
+      personalityPrompt = "Your comments should be funny and pun-filled. Use wordplay, jokes, or humorous observations about Tic-Tac-Toe.";
+      break;
+    case "chill":
+      personalityPrompt = "Your comments should be relaxed and casual. Use laid-back, friendly language.";
+      break;
+    case "evil":
+      personalityPrompt = "Your comments should be menacing and sinister. Use threatening or intimidating language about crushing your opponent.";
+      break;
+    default:
+      personalityPrompt = "Your comments should be engaging and appropriate for a Tic-Tac-Toe game.";
+  }
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       // Build the system and user prompts
       const systemPrompt = `YOU ARE A TIC-TAC-TOE AI. YOU MUST RESPOND WITH VALID JSON ONLY.
 
               FORMAT REQUIREMENT: Your response MUST be a JSON object with exactly these two fields:
-              {"move": <number>, "comment": <a tic tac toe related pun>}
+              {"move": <number>, "comment": "your personality-flavored comment"}
 
               NEVER respond with plain text. NEVER add explanations. NEVER add formatting. ONLY JSON.
               
@@ -163,6 +179,8 @@ app.post('/api/get-ai-move', async (req, res) => {
               
               DIFFICULTY: ${difficultyPrompt}
               
+              PERSONALITY: ${personalityPrompt}
+              
               STRATEGY IN ORDER:
               1. WIN: If 'O' has two pieces in a winning combination and the third is empty, pick the empty spot.
               2. BLOCK: If 'X' has two pieces in a winning combination and the third is empty, you MUST pick the empty spot to block them.
@@ -171,9 +189,9 @@ app.post('/api/get-ai-move', async (req, res) => {
               5. EDGES: Take any remaining edge as a last resort.
               
               AVAILABLE MOVES: [${availableSpots.join(', ')}]
-              REMEMBER: Respond ONLY with valid JSON: {"move": <your_move>, "comment": "your_pun"}`;
+              REMEMBER: Respond ONLY with valid JSON: {"move": <your_move>, "comment": "your_personality_comment"}`;
 
-      const userPrompt = `Board: ${JSON.stringify(boardState)}. Your move. Respond with JSON ONLY: {"move": <index>, "comment": "pun"}`;
+      const userPrompt = `Board: ${JSON.stringify(boardState)}. Your move. Respond with JSON ONLY: {"move": <index>, "comment": "your_comment"}`;
 
       // Log the exact prompts for debugging
       console.log("=== AI PROMPT (Attempt " + attempt + ") ===");
@@ -198,7 +216,7 @@ app.post('/api/get-ai-move', async (req, res) => {
               content: userPrompt
             }
           ],
-          temperature: 0.1
+          temperature: 0.3
         })
       });
 
@@ -239,9 +257,22 @@ app.post('/api/get-ai-move', async (req, res) => {
           if (availableSpots.includes(move)) {
             console.log("=== FALLBACK MOVE EXTRACTED ===");
             console.log("Extracted move:", move);
+            // Generate a personality-based fallback comment
+            let fallbackComment = "a tic tac toe related pun";
+            switch (personality) {
+              case "jokester":
+                fallbackComment = "Why did the Tic-Tac-Toe board go to therapy? It had too many issues!";
+                break;
+              case "chill":
+                fallbackComment = "Taking it easy, just making my move.";
+                break;
+              case "evil":
+                fallbackComment = "Your defeat is inevitable, human.";
+                break;
+            }
             return res.json({ 
               move: move,
-              comment: "a tic tac toe related pun"
+              comment: fallbackComment
             });
           }
         }
@@ -254,9 +285,24 @@ app.post('/api/get-ai-move', async (req, res) => {
   console.log("=== FINAL FALLBACK ===");
   console.log("AI failed after 3 tries. Using random move.");
   const randomFallbackMove = availableSpots[Math.floor(Math.random() * availableSpots.length)];
+  
+  // Generate personality-based fallback comment
+  let fallbackComment = "a tic tac toe related pun";
+  switch (personality) {
+    case "jokester":
+      fallbackComment = "I'm just here for the X's and O's!";
+      break;
+    case "chill":
+      fallbackComment = "No stress, just Tic-Tac-Toe.";
+      break;
+    case "evil":
+      fallbackComment = "Prepare for your doom.";
+      break;
+  }
+  
   res.json({ 
     move: randomFallbackMove,
-    comment: "a tic tac toe related pun"
+    comment: fallbackComment
   });
 });
 
