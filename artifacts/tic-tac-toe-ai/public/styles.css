@@ -1,4 +1,50 @@
 .hidden {display: none; }
+
+/* Navigation Bar Styling */
+nav {
+  background-color: #f0f0f0;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #333;
+  margin-bottom: 20px;
+}
+
+nav a, nav button {
+  text-decoration: none;
+  color: #333;
+  margin: 0 15px;
+  padding: 5px 10px;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+
+nav a:hover, nav button:hover {
+  color: #0066cc;
+}
+
+#Login-tab, #Logged-in {
+  display: inline-block;
+}
+
+#Logged-in {
+  margin: 0 15px;
+}
+
+#signout-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+
+#signout-button:hover {
+  color: #0066cc;
+}
+
+/* Game Board Styling */
 #board {
   display: grid;
   grid-template-columns: repeat(3, 100px); /* Three columns of 100px */
@@ -28,6 +74,8 @@
 body {
   text-align: center;
   font-family: sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 /* Modifiers Panel Styling */
