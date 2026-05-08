@@ -113,6 +113,21 @@ app.post('/api/save-game', (req, res) => {
   }
 });
 
+// --- API ROUTES: LEADERBOARD ---
+app.get('/api/games', (req, res) => {
+  try {
+    if (!fs.existsSync(gamesFilePath)) {
+      return res.status(200).json([]);
+    }
+    const data = fs.readFileSync(gamesFilePath, 'utf8');
+    const games = JSON.parse(data || '[]');
+    res.status(200).json(games);
+  } catch (err) {
+    console.error('Error reading games file:', err);
+    res.status(500).send('Error loading games.');
+  }
+});
+
 // --- AI MOVE ROUTE (CP07) ---
 app.post('/api/get-ai-move', async (req, res) => {
   if (!req.session.user) return res.status(401).send('Unauthorized');
