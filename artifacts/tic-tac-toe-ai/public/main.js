@@ -66,34 +66,6 @@ const updateAuthUI = (username) => {
   }
 };
 
-// --- AUTHENTICATION ---
-const checkAuth = async () => {
-  try {
-    // Check localStorage first
-    const username = getLoggedInUsername();
-    
-    if (username) {
-      updateAuthUI(username);
-      return;
-    }
-
-    // Fallback to server check
-    const response = await fetch('/api/me');
-    
-    if (response.ok) {
-      const user = await response.json();
-      updateAuthUI(user.username);
-      // Save to localStorage for persistence
-      saveLoginState(user.username);
-    } else {
-      updateAuthUI(null);
-      clearLoginState();
-    }
-  } catch (error) {
-    console.error("Auth check failed", error);
-  }
-};
-
 // --- UI STATE MANAGEMENT FOR LOGIN PAGE ---
 const showSection = (sectionId) => {
   const sections = ['login-form', 'signup-form', 'success', 'Logged-in'];
@@ -109,6 +81,42 @@ const showSection = (sectionId) => {
   }
 };
 
+// --- AUTHENTICATION ---
+const checkAuth = async () => {
+  try {
+    // Check localStorage first
+    const username = getLoggedInUsername();
+    
+    if (username) {
+      updateAuthUI(username);
+      // If on login page, show the logged-in message
+      if (window.location.pathname.endsWith('login.html') || window.location.pathname.endsWith('/login')) {
+        showSection('Logged-in');
+      }
+      return;
+    }
+
+    // Fallback to server check
+    const response = await fetch('/api/me');
+    
+    if (response.ok) {
+      const user = await response.json();
+      updateAuthUI(user.username);
+      // Save to localStorage for persistence
+      saveLoginState(user.username);
+      // If on login page, show the logged-in message
+      if (window.location.pathname.endsWith('login.html') || window.location.pathname.endsWith('/login')) {
+        showSection('Logged-in');
+      }
+    } else {
+      updateAuthUI(null);
+      clearLoginState();
+    }
+  } catch (error) {
+    console.error("Auth check failed", error);
+  }
+};
+
 // --- EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Run auth check to handle the UI visibility
@@ -117,7 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Only run login page logic if on login.html
   if (window.location.pathname.endsWith('login.html') || window.location.pathname.endsWith('/login')) {
     // INITIAL STATE: Hide all forms, leaving ONLY the #choice buttons visible
-    showSection(null);
+    // But if user is logged in, don't hide the Logged-in message
+    const username = getLoggedInUsername();
+    if (!username) {
+      showSection(null);
+    }
 
     // Handle Choice Buttons: Swap between login and signup forms
     document.getElementById('login')?.addEventListener('click', () => showSection('login-form'));
