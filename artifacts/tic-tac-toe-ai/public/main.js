@@ -40,7 +40,7 @@ const clearLoginState = () => {
 // --- UI STATE MANAGEMENT ---
 const updateAuthUI = (username) => {
   const loginTab = document.getElementById('Login-tab');
-  const loggedInDiv = document.getElementById('Logged-in');
+  const loggedInNav = document.getElementById('Logged-in-nav') || document.getElementById('Logged-in');
   const startGameButton = document.getElementById('start-game-button');
   const modifiersPanel = document.getElementById('modifiers-panel');
   const loginPrompt = document.getElementById('login-prompt');
@@ -48,7 +48,7 @@ const updateAuthUI = (username) => {
 
   if (username) {
     if (loginTab) loginTab.classList.add('hidden');
-    if (loggedInDiv) loggedInDiv.classList.remove('hidden');
+    if (loggedInNav) loggedInNav.classList.remove('hidden');
     if (startGameButton) startGameButton.classList.remove('hidden');
     if (modifiersPanel) modifiersPanel.classList.remove('hidden');
     if (loginPrompt) loginPrompt.classList.add('hidden');
@@ -58,7 +58,7 @@ const updateAuthUI = (username) => {
     }
   } else {
     if (loginTab) loginTab.classList.remove('hidden');
-    if (loggedInDiv) loggedInDiv.classList.add('hidden');
+    if (loggedInNav) loggedInNav.classList.add('hidden');
     if (startGameButton) startGameButton.classList.add('hidden');
     if (modifiersPanel) modifiersPanel.classList.add('hidden');
     if (loginPrompt) loginPrompt.classList.remove('hidden');
@@ -176,6 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide login prompt
         const loginPrompt = document.getElementById('login-prompt');
         if (loginPrompt) loginPrompt.classList.add('hidden');
+        
+        // Update nav bar
+        const loggedInNav = document.getElementById('Logged-in-nav');
+        if (loggedInNav) loggedInNav.classList.remove('hidden');
+        const loginTab = document.getElementById('Login-tab');
+        if (loginTab) loginTab.classList.add('hidden');
         
         // Redirect to home page after successful login
         window.location.href = 'index.html';
