@@ -5,6 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaderboard - Tic Tac Toe AI</title>
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Leaderboard specific styles */
+      #leaderboard-table {
+        width: 80%;
+        margin: 20px auto;
+        border-collapse: collapse;
+        font-family: sans-serif;
+      }
+      
+      #leaderboard-table th, #leaderboard-table td {
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        text-align: center;
+      }
+      
+      #leaderboard-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+      }
+      
+      #leaderboard-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      
+      #leaderboard-table tr:hover {
+        background-color: #f0f0f0;
+        cursor: pointer;
+      }
+      
+      .game-row {
+        cursor: pointer;
+      }
+      
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      
+      .modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      
+      .modal-board {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        grid-template-rows: repeat(3, 100px);
+        gap: 5px;
+        margin: 20px auto;
+        width: max-content;
+      }
+      
+      .modal-cell {
+        width: 100px;
+        height: 100px;
+        border: 2px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-family: sans-serif;
+        background-color: #fff;
+      }
+      
+      .playback-controls {
+        margin: 15px 0;
+      }
+      
+      .playback-controls button {
+        padding: 8px 16px;
+        margin: 0 5px;
+        cursor: pointer;
+      }
+      
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      
+      .close:hover {
+        color: #000;
+      }
+      
+      .move-info {
+        margin: 10px 0;
+        font-style: italic;
+        color: #666;
+      }
+    </style>
   </head>
   <body>
     <nav>
@@ -12,15 +117,43 @@
       <div id="Login-tab">
         <a href="login.html">Login</a>
       </div>
-      <div id="Logged-in" class="hidden">
-        <span id="username-greeting"></span>
+      <div id="Logged-in-nav" class="hidden">
         <button id="signout-button">Sign Out</button>
       </div>
       <a href="leaderboard.html">Leaderboard</a>
     </nav>
     
-    <h1>Leaderboard</h1>
-    <p>Placeholder leaderboard page. Coming soon!</p>
+    <h1>Game History</h1>
+    
+    <table id="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Game ID</th>
+          <th>Player</th>
+          <th>Winner</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="games-list">
+        <!-- Games will be loaded here -->
+      </tbody>
+    </table>
+    
+    <!-- Modal for board display and playback -->
+    <div id="game-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">Game Replay</h2>
+        <p id="modal-winner"></p>
+        <div class="move-info" id="move-info"></div>
+        <div class="modal-board" id="modal-board"></div>
+        <div class="playback-controls">
+          <button id="prev-move">← Previous</button>
+          <button id="next-move">Next →</button>
+          <button id="reset-playback">Reset</button>
+        </div>
+      </div>
+    </div>
     
     <script src="main.js"></script>
     <script src="leaderboard.js"></script>
